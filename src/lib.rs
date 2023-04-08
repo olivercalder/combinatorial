@@ -74,7 +74,7 @@ impl<T: Ord + Clone> Combinations<T> {
     }
 
     fn get_current_combination(&mut self) -> Option<Vec<T>> {
-        if self.done {
+        if self.done || self.positions.len() > self.elements.len() {
             return None;
         }
         Some(
@@ -93,13 +93,13 @@ impl<T: Ord + Clone> Iterator for Combinations<T> {
         if self.done {
             return None;
         }
+        let combo = self.get_current_combination();
         if self.move_to_next_position() == false {
             if self.all_sizes == false || self.move_to_next_set_size() == false {
                 self.done = true;
-                return None;
             }
         }
-        self.get_current_combination()
+        combo
     }
 }
 
@@ -225,5 +225,39 @@ mod tests {
         assert_eq!(combos.move_to_next_position(), false);
         combos.done = true;
         assert_eq!(combos.get_current_combination(), None);
+    }
+
+    #[test]
+    fn test_combinations_next() {
+        let mut combos = Combinations::with_size(&vec![1, 2, 3], 0);
+        assert_eq!(combos.next(), Some(Vec::new()));
+        assert_eq!(combos.next(), None);
+        let mut combos = Combinations::with_size(&vec![1, 2, 3], 4);
+        assert_eq!(combos.next(), None);
+        let mut combos: Combinations<u64> = Combinations::with_size(&Vec::new(), 0);
+        assert_eq!(combos.next(), Some(Vec::new()));
+        assert_eq!(combos.next(), None);
+        let combos = Combinations::all(&vec![1, 1, 2, 3, 5]);
+        assert_eq!(
+            combos.collect::<Vec<Vec<u64>>>(),
+            vec![
+                Vec::new(),
+                vec![1],
+                vec![2],
+                vec![3],
+                vec![5],
+                vec![1, 2],
+                vec![1, 3],
+                vec![1, 5],
+                vec![2, 3],
+                vec![2, 5],
+                vec![3, 5],
+                vec![1, 2, 3],
+                vec![1, 2, 5],
+                vec![1, 3, 5],
+                vec![2, 3, 5],
+                vec![1, 2, 3, 5],
+            ]
+        );
     }
 }
