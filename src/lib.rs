@@ -27,7 +27,7 @@ impl<T: Ord + Clone> Combinations<T> {
         }
     }
 
-    pub fn with_size(elements: impl IntoIterator<Item = T>, size: usize) -> Self {
+    pub fn of_size(elements: impl IntoIterator<Item = T>, size: usize) -> Self {
         Combinations {
             elements: iterable_to_sorted_set(elements),
             positions: (0..size).collect(),
@@ -123,8 +123,8 @@ mod tests {
     }
 
     #[test]
-    fn test_combinations_with_size() {
-        let combos = Combinations::with_size(vec![2, 4, 3, 1, 2, 2, 1].into_iter(), 3);
+    fn test_combinations_of_size() {
+        let combos = Combinations::of_size(vec![2, 4, 3, 1, 2, 2, 1].into_iter(), 3);
         assert_eq!(combos.elements, vec![1, 2, 3, 4]);
         assert_eq!(combos.positions, vec![0, 1, 2]);
         assert_eq!(combos.all_sizes, false);
@@ -166,13 +166,13 @@ mod tests {
 
     #[test]
     fn test_combinations_move_to_next_position() {
-        let mut combos = Combinations::with_size(Vec::<i64>::new(), 1);
+        let mut combos = Combinations::of_size(Vec::<i64>::new(), 1);
         assert_eq!(combos.positions, vec![0]);
         assert_eq!(combos.move_to_next_position(), false);
-        let mut combos = Combinations::with_size(vec![1], 1);
+        let mut combos = Combinations::of_size(vec![1], 1);
         assert_eq!(combos.positions, vec![0]);
         assert_eq!(combos.move_to_next_position(), false);
-        let mut combos = Combinations::with_size(BTreeSet::from([1, 2, 3, 4]), 2);
+        let mut combos = Combinations::of_size(BTreeSet::from([1, 2, 3, 4]), 2);
         assert_eq!(combos.positions, vec![0, 1]);
         assert_eq!(combos.move_to_next_position(), true);
         assert_eq!(combos.positions, vec![0, 2]);
@@ -185,7 +185,7 @@ mod tests {
         assert_eq!(combos.move_to_next_position(), true);
         assert_eq!(combos.positions, vec![2, 3]);
         assert_eq!(combos.move_to_next_position(), false);
-        let mut combos = Combinations::with_size("abcd".chars(), 3);
+        let mut combos = Combinations::of_size("abcd".chars(), 3);
         assert_eq!(combos.positions, vec![0, 1, 2]);
         assert_eq!(combos.move_to_next_position(), true);
         assert_eq!(combos.positions, vec![0, 1, 3]);
@@ -198,7 +198,7 @@ mod tests {
 
     #[test]
     fn test_combinations_get_current_combination() {
-        let mut combos = Combinations::with_size(vec![1, 1, 2, 3, 5, 8], 3);
+        let mut combos = Combinations::of_size(vec![1, 1, 2, 3, 5, 8], 3);
         assert_eq!(combos.get_current_combination(), Some(vec![1, 2, 3]));
         assert_eq!(combos.move_to_next_position(), true);
         assert_eq!(combos.get_current_combination(), Some(vec![1, 2, 5]));
@@ -225,12 +225,12 @@ mod tests {
 
     #[test]
     fn test_combinations_next() {
-        let mut combos = Combinations::with_size(vec![1, 2, 3], 0);
+        let mut combos = Combinations::of_size(vec![1, 2, 3], 0);
         assert_eq!(combos.next(), Some(Vec::new()));
         assert_eq!(combos.next(), None);
-        let mut combos = Combinations::with_size(vec![1, 2, 3], 4);
+        let mut combos = Combinations::of_size(vec![1, 2, 3], 4);
         assert_eq!(combos.next(), None);
-        let mut combos: Combinations<u64> = Combinations::with_size(Vec::new(), 0);
+        let mut combos: Combinations<u64> = Combinations::of_size(Vec::new(), 0);
         assert_eq!(combos.next(), Some(Vec::new()));
         assert_eq!(combos.next(), None);
         let combos = Combinations::all("hello".chars());
