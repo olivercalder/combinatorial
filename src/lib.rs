@@ -13,7 +13,13 @@ where
 }
 
 fn vec_to_sorted_set<T: Ord + Clone>(elements: &Vec<T>) -> Vec<T> {
-    elements.iter().cloned().collect::<BTreeSet<T>>().iter().cloned().collect::<Vec<T>>()
+    elements
+        .iter()
+        .cloned()
+        .collect::<BTreeSet<T>>()
+        .iter()
+        .cloned()
+        .collect::<Vec<T>>()
 }
 
 impl<T: Ord + Clone> Combinations<T> {
@@ -39,7 +45,10 @@ impl<T: Ord + Clone> Combinations<T> {
         if self.positions.len() >= self.elements.len() {
             return false;
         }
-        self.positions.iter_mut().enumerate().for_each(|(index, pos)| *pos = index);
+        self.positions
+            .iter_mut()
+            .enumerate()
+            .for_each(|(index, pos)| *pos = index);
         self.positions.push(self.positions.len());
         true
     }
@@ -54,7 +63,7 @@ impl<T: Ord + Clone> Combinations<T> {
             if index == length - 1 || cur_position < self.positions.get(index + 1).unwrap() - 1 {
                 let mut next_position = cur_position + 1;
                 *self.positions.get_mut(index).unwrap() = next_position;
-                for i in index+1..length {
+                for i in index + 1..length {
                     next_position += 1;
                     *self.positions.get_mut(i).unwrap() = next_position;
                 }
@@ -68,7 +77,12 @@ impl<T: Ord + Clone> Combinations<T> {
         if self.done {
             return None;
         }
-        Some(self.positions.iter().map(|p| self.elements.get(*p).unwrap().clone()).collect::<Vec<T>>())
+        Some(
+            self.positions
+                .iter()
+                .map(|p| self.elements.get(*p).unwrap().clone())
+                .collect::<Vec<T>>(),
+        )
     }
 }
 
@@ -97,7 +111,10 @@ mod tests {
     fn test_combinations_vec_to_sorted_set() {
         assert_eq!(vec![1, 2, 3, 4], vec_to_sorted_set(&vec![1, 2, 3, 4]));
         assert_eq!(vec![1, 2, 3, 4], vec_to_sorted_set(&vec![2, 3, 1, 4]));
-        assert_eq!(vec![1, 2, 3, 4], vec_to_sorted_set(&vec![2, 1, 3, 1, 4, 2, 2, 3]));
+        assert_eq!(
+            vec![1, 2, 3, 4],
+            vec_to_sorted_set(&vec![2, 1, 3, 1, 4, 2, 2, 3])
+        );
     }
 
     #[test]
