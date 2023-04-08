@@ -1,0 +1,15 @@
+[package]
+name = "combs"
+version = "0.1.0"
+authors = ["Oliver Calder <oliver@calder.dev>"]
+edition = "2021"
+description = "A combination generator for Rust"
+documentation = "https://docs.rs/combs"
+readme = "README.md"
+homepage = "https://github.com/olivercalder/combs/"
+repository = "https://github.com/olivercalder/combs/"
+license = "MIT"
+keywords = ["combinations", "combinatorics", "itertools", "mathematics"]
+categories = ["mathematics"]
+
+[dependencies]
