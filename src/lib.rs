@@ -1,4 +1,4 @@
-//! A combination generator for Rust
+//! Combinatorial tools, functions, and generators.
 
 use std::collections::BTreeSet;
 
