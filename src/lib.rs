@@ -2,6 +2,7 @@
 
 use std::collections::BTreeSet;
 
+/// An iterator which generates combinations over a set of elements.
 pub struct Combinations<T> {
     elements: Vec<T>,
     positions: Vec<usize>,
@@ -9,6 +10,8 @@ pub struct Combinations<T> {
     done: bool,
 }
 
+/// Converts an iterable input into a sorted vector containing one of every unique item from the
+/// original iterable.
 fn iterable_to_sorted_set<T: Ord + Clone>(elements: impl IntoIterator<Item = T>) -> Vec<T> {
     elements
         .into_iter()
@@ -18,6 +21,8 @@ fn iterable_to_sorted_set<T: Ord + Clone>(elements: impl IntoIterator<Item = T>)
 }
 
 impl<T: Ord + Clone> Combinations<T> {
+    /// Creates a new `Combinations` iterator which will yield all combinations of the elements in
+    /// the given iterable.
     pub fn all(elements: impl IntoIterator<Item = T>) -> Self {
         Combinations {
             elements: iterable_to_sorted_set(elements),
@@ -27,6 +32,8 @@ impl<T: Ord + Clone> Combinations<T> {
         }
     }
 
+    /// Creates a new `Combinations` iterator which will yield all combinations with the specified
+    /// size from the elements in the given iterable.
     pub fn of_size(elements: impl IntoIterator<Item = T>, size: usize) -> Self {
         Combinations {
             elements: iterable_to_sorted_set(elements),
@@ -36,6 +43,8 @@ impl<T: Ord + Clone> Combinations<T> {
         }
     }
 
+    /// Adds another position indicator to the internal positions list and resets them to point to
+    /// the first `n` indices in order.
     fn move_to_next_set_size(&mut self) -> bool {
         if self.positions.len() >= self.elements.len() {
             return false;
@@ -48,11 +57,17 @@ impl<T: Ord + Clone> Combinations<T> {
         true
     }
 
+    /// Increments the internal positions to correspond to the indices of the next combination of
+    /// the same size.  If the positions are successfully incremented at the current combination
+    /// set size, then returns `true`.  Otherwise, returns `false`.
     fn move_to_next_position(&mut self) -> bool {
+        if self.elements.len() == 0 {
+            return false
+        }
         let length = self.positions.len();
         for index in (0..self.positions.len()).rev() {
             let cur_position = *self.positions.get(index).unwrap();
-            if self.elements.len() == 0 || cur_position >= self.elements.len() - 1 {
+            if cur_position >= self.elements.len() - 1 {
                 continue;
             }
             if index == length - 1 || cur_position < self.positions.get(index + 1).unwrap() - 1 {
@@ -68,6 +83,7 @@ impl<T: Ord + Clone> Combinations<T> {
         false
     }
 
+    /// Returns the current combination, if one exists and is valid.
     fn get_current_combination(&mut self) -> Option<Vec<T>> {
         if self.done || self.positions.len() > self.elements.len() {
             return None;
@@ -84,7 +100,8 @@ impl<T: Ord + Clone> Combinations<T> {
 impl<T: Ord + Clone> Iterator for Combinations<T> {
     type Item = Vec<T>;
 
-    fn next(&mut self) -> Option<Self::Item> {
+    /// Returns the next combination and advances the internal iterator.
+    pub fn next(&mut self) -> Option<Self::Item> {
         if self.done {
             return None;
         }
