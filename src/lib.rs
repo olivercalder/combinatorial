@@ -101,7 +101,7 @@ impl<T: Ord + Clone> Iterator for Combinations<T> {
     type Item = Vec<T>;
 
     /// Returns the next combination and advances the internal iterator.
-    pub fn next(&mut self) -> Option<Self::Item> {
+    fn next(&mut self) -> Option<Self::Item> {
         if self.done {
             return None;
         }
