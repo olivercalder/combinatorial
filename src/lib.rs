@@ -1,7 +1,7 @@
 //! Combinatorial tools, functions, and generators.
 
 mod combinations;
-pub use combinations::Combinations;
+pub use combinations::{Combinations, CombinationsWithReplacement};
 
 /// Returns the `n`th triangle number.
 ///
@@ -80,6 +80,9 @@ mod tests {
         assert_eq!(combos.next(), None);
         let mut combos = Combinations::of_size(vec![1, 2, 3], 4);
         assert_eq!(combos.next(), None);
+        let mut combos: Combinations<u64> = Combinations::all(Vec::new());
+        assert_eq!(combos.next(), Some(Vec::new()));
+        assert_eq!(combos.next(), None);
         let mut combos: Combinations<u64> = Combinations::of_size(Vec::new(), 0);
         assert_eq!(combos.next(), Some(Vec::new()));
         assert_eq!(combos.next(), None);
@@ -103,6 +106,97 @@ mod tests {
                 "elo",
                 "hlo",
                 "ehlo",
+            ]
+        );
+    }
+
+    #[test]
+    fn test_combinations_w_rep_next() {
+        let mut combos = CombinationsWithReplacement::of_size(vec![1, 2, 3], 0);
+        assert_eq!(combos.next(), Some(Vec::new()));
+        assert_eq!(combos.next(), None);
+        let mut combos = CombinationsWithReplacement::of_size(vec![1, 2, 3], 4);
+        assert_eq!(combos.next(), None);
+        let mut combos: CombinationsWithReplacement<u64> = CombinationsWithReplacement::all(Vec::new());
+        assert_eq!(combos.next(), Some(Vec::new()));
+        assert_eq!(combos.next(), None);
+        let mut combos: CombinationsWithReplacement<u64> = CombinationsWithReplacement::of_size(Vec::new(), 0);
+        assert_eq!(combos.next(), Some(Vec::new()));
+        assert_eq!(combos.next(), None);
+        let combos = CombinationsWithReplacement::all("hello".chars());
+        assert_eq!(
+            combos.map(String::from_iter).collect::<Vec<String>>(),
+            vec![
+                "",
+                "e",
+                "h",
+                "l",
+                "o",
+                "ee",
+                "eh",
+                "el",
+                "eo",
+                "hh",
+                "hl",
+                "ho",
+                "ll",
+                "lo",
+                "oo",
+                "eee",
+                "eeh",
+                "eel",
+                "eeo",
+                "ehh",
+                "ehl",
+                "eho",
+                "ell",
+                "elo",
+                "eoo",
+                "hhh",
+                "hhl",
+                "hho",
+                "hll",
+                "hlo",
+                "hoo",
+                "lll",
+                "llo",
+                "loo",
+                "ooo",
+                "eeee",
+                "eeeh",
+                "eeel",
+                "eeeo",
+                "eehh",
+                "eehl",
+                "eeho",
+                "eell",
+                "eelo",
+                "eeoo",
+                "ehhh",
+                "ehhl",
+                "ehho",
+                "ehll",
+                "ehlo",
+                "ehoo",
+                "elll",
+                "ello",
+                "eloo",
+                "eooo",
+                "hhhh",
+                "hhhl",
+                "hhho",
+                "hhll",
+                "hhlo",
+                "hhoo",
+                "hlll",
+                "hllo",
+                "hloo",
+                "hooo",
+                "llll",
+                "lllo",
+                "lloo",
+                "looo",
+                "oooo",
             ]
         );
     }
