@@ -111,7 +111,7 @@ impl<T: Ord + Clone> Combinations<T> {
     /// set size, then returns `true`.  Otherwise, returns `false`.
     fn move_to_next_position(&mut self) -> bool {
         if self.elements.len() == 0 {
-            return false
+            return false;
         }
         let length = self.positions.len();
         for index in (0..self.positions.len()).rev() {
@@ -266,9 +266,7 @@ impl<T: Ord + Clone> CombinationsWithReplacement<T> {
         if self.positions.len() >= self.elements.len() {
             return false;
         }
-        self.positions
-            .iter_mut()
-            .for_each(|pos| *pos = 0);
+        self.positions.iter_mut().for_each(|pos| *pos = 0);
         self.positions.push(0);
         true
     }
@@ -278,7 +276,7 @@ impl<T: Ord + Clone> CombinationsWithReplacement<T> {
     /// set size, then returns `true`.  Otherwise, returns `false`.
     fn move_to_next_position(&mut self) -> bool {
         if self.elements.len() == 0 {
-            return false
+            return false;
         }
         let length = self.positions.len();
         for index in (0..self.positions.len()).rev() {
@@ -337,7 +335,10 @@ mod tests {
     fn test_combinations_iterable_to_sorted_set() {
         assert_eq!(vec![1, 2, 3, 4], iterable_to_sorted_set(vec![1, 2, 3, 4]));
         assert_eq!(vec![1, 2, 3, 4], iterable_to_sorted_set(1..5));
-        assert_eq!(vec![1, 2, 3, 4].iter().collect::<Vec<&usize>>(), iterable_to_sorted_set(vec![2, 3, 1, 4].iter()));
+        assert_eq!(
+            vec![1, 2, 3, 4].iter().collect::<Vec<&usize>>(),
+            iterable_to_sorted_set(vec![2, 3, 1, 4].iter())
+        );
         assert_eq!(
             vec![&1, &2, &3, &4],
             iterable_to_sorted_set(&vec![2, 1, 3, 1, 4, 2, 2, 3])
