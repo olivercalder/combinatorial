@@ -17,7 +17,9 @@ use std::collections::BTreeSet;
 /// assert_eq!(ones_and_zeros, vec![Vec::new(), vec![0], vec![1], vec![0, 1]]);
 /// ```
 pub struct Combinations<T> {
-    elements: Vec<T>,
+    elements_iter: Box<dyn Iterator<Item = T>>,
+    elements_vec: Vec<T>,
+    elements_set: BTreeSet<T>,
     positions: Vec<usize>,
     all_sizes: bool,
     done: bool,
@@ -55,7 +57,9 @@ impl<T: Ord + Clone> Combinations<T> {
     /// ```
     pub fn all(elements: impl IntoIterator<Item = T>) -> Self {
         Combinations {
-            elements: iterable_to_sorted_set(elements),
+            elements_iter: Box::new(elements.into_iter()),
+            elements_vec: Vec::new(),
+            elements_set: BTreeSet::new(),
             positions: Vec::new(),
             all_sizes: true,
             done: false,
@@ -85,18 +89,31 @@ impl<T: Ord + Clone> Combinations<T> {
     /// ```
     pub fn of_size(elements: impl IntoIterator<Item = T>, size: usize) -> Self {
         Combinations {
-            elements: iterable_to_sorted_set(elements),
+            elements_iter: Box::new(elements.into_iter()),
+            elements_vec: Vec::new(),
+            elements_set: BTreeSet::new(),
             positions: (0..size).collect(),
             all_sizes: false,
             done: false,
         }
     }
 
+    fn populate_next_unique_element(&mut self) -> bool {
+        while let Some(element) = self.elements_iter.next() {
+            if self.elements_set.insert(element) == true {
+                return true;
+            }
+        }
+        false
+    }
+
     /// Adds another position indicator to the internal positions list and resets them to point to
     /// the first `n` indices in order.
     fn move_to_next_set_size(&mut self) -> bool {
-        if self.positions.len() >= self.elements.len() {
-            return false;
+        if self.positions.len() == self.elements_vec.len() {
+            if self.populate_next_unique_element() == false {
+                return false;
+            }
         }
         self.positions
             .iter_mut()
@@ -110,14 +127,18 @@ impl<T: Ord + Clone> Combinations<T> {
     /// the same size.  If the positions are successfully incremented at the current combination
     /// set size, then returns `true`.  Otherwise, returns `false`.
     fn move_to_next_position(&mut self) -> bool {
-        if self.elements.len() == 0 {
-            return false;
+        if self.elements_vec.len() == 0 {
+            if self.populate_next_unique_element() == false {
+                return false;
+            }
         }
         let length = self.positions.len();
         for index in (0..self.positions.len()).rev() {
             let cur_position = *self.positions.get(index).unwrap();
-            if cur_position >= self.elements.len() - 1 {
-                continue;
+            if cur_position >= self.elements_vec.len() - 1 {
+                if self.populate_next_unique_element() == false {
+                    continue;
+                }
             }
             if index == length - 1 || cur_position < self.positions.get(index + 1).unwrap() - 1 {
                 let mut next_position = cur_position + 1;
@@ -134,13 +155,13 @@ impl<T: Ord + Clone> Combinations<T> {
 
     /// Returns the current combination, if one exists and is valid.
     fn get_current_combination(&mut self) -> Option<Vec<T>> {
-        if self.done || self.positions.len() > self.elements.len() {
+        if self.done || self.positions.len() > self.elements_vec.len() {
             return None;
         }
         Some(
             self.positions
                 .iter()
-                .map(|p| self.elements.get(*p).unwrap().clone())
+                .map(|p| self.elements_vec.get(*p).unwrap().clone())
                 .collect::<Vec<T>>(),
         )
     }
@@ -348,7 +369,7 @@ mod tests {
     #[test]
     fn test_combinations_all() {
         let combos = Combinations::all(vec![2, 4, 3, 1, 2, 2, 1].into_iter());
-        assert_eq!(combos.elements, vec![1, 2, 3, 4]);
+        assert_eq!(combos.elements_vec, vec![1, 2, 3, 4]);
         assert_eq!(combos.positions, Vec::new());
         assert_eq!(combos.all_sizes, true);
         assert_eq!(combos.done, false);
@@ -366,7 +387,7 @@ mod tests {
     #[test]
     fn test_combinations_of_size() {
         let combos = Combinations::of_size(vec![2, 4, 3, 1, 2, 2, 1].into_iter(), 3);
-        assert_eq!(combos.elements, vec![1, 2, 3, 4]);
+        assert_eq!(combos.elements_vec, vec![1, 2, 3, 4]);
         assert_eq!(combos.positions, vec![0, 1, 2]);
         assert_eq!(combos.all_sizes, false);
         assert_eq!(combos.done, false);
