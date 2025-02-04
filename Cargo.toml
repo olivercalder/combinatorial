@@ -1,6 +1,6 @@
 [package]
 name = "combinatorial"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Oliver Calder <oliver@calder.dev>"]
 edition = "2021"
 description = "Combinatorial tools, functions, and generators."
