@@ -282,9 +282,15 @@ impl<T: Ord + Clone> CombinationsWithReplacement<T> {
         for index in (0..self.positions.len()).rev() {
             let cur_position = *self.positions.get(index).unwrap();
             if cur_position >= self.elements.len() - 1 {
+                // We only want to advance an earlier position if all later positions are already
+                // at the final element. Otherwise, we'd advance the latest position which is not
+                // yet at the final element.
                 continue;
             }
             let next_position = cur_position + 1;
+            // We know that `cur_position` is not at the final element, and any later positions
+            // must be at the final element, so we can unconditionally set the current and any
+            // subsequent positions to `next_position`.
             for i in index..length {
                 *self.positions.get_mut(i).unwrap() = next_position;
             }
