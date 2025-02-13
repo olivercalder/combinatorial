@@ -1,7 +1,10 @@
 //! Combinatorial tools, functions, and generators.
 
 mod combinations;
+mod permutations;
+
 pub use combinations::{Combinations, CombinationsWithReplacement};
+pub use permutations::Permutations;
 
 /// Returns the `n`th triangle number.
 ///
