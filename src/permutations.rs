@@ -6,6 +6,7 @@ struct Entry {
 }
 
 struct AvailableList {
+    head: Option<usize>,
     entries: Vec<Entry>, // TODO: use boxed array instead
 }
 
@@ -15,20 +16,16 @@ impl AvailableList {
     fn new(num_elements: usize) -> Self {
         if num_elements == 0 {
             return Self {
-                entries: vec![Entry {
-                    prev: None,
-                    next: None,
-                }],
+                head: None,
+                entries: Vec::new(),
             };
         }
-        let mut entries: Vec<Entry> = Vec::with_capacity(num_elements + 1); // need space for head
+        let mut entries: Vec<Entry> = Vec::with_capacity(num_elements);
         entries.push(Entry {
-            // the 0th entry will act as a "head", but with removal of head.next working
-            // consistently as with entries at other indices.
             prev: None,
             next: Some(1),
         });
-        for i in 1..num_elements {
+        for i in 1..(num_elements - 1) {
             entries.push(Entry {
                 prev: Some(i - 1),
                 next: Some(i + 1),
@@ -38,12 +35,16 @@ impl AvailableList {
             prev: Some(num_elements - 1),
             next: None,
         });
-        Self { entries }
+        debug_assert_eq!(entries.len(), num_elements);
+        Self {
+            head: Some(0),
+            entries,
+        }
     }
 
     /// Remove the first available entry from the list and returns its index, if one exists.
     fn remove_first(&mut self) -> Option<usize> {
-        let Some(i) = self.entries[0].next else {
+        let Some(i) = self.head else {
             return None;
         };
         self.remove(i);
@@ -53,12 +54,13 @@ impl AvailableList {
     /// Remove the entry at the given index from the list. Entries must be re-added in the reverse
     /// order from which they were removed, else the list will be corrupted.
     fn remove(&mut self, i: usize) {
-        debug_assert!(i > 0); // not the header
-        debug_assert!(i < self.entries.len()); // TODO: use footer, and check < length - 1
+        debug_assert!(i < self.entries.len());
         let prev = self.entries[i].prev;
         let next = self.entries[i].next;
         if let Some(p) = prev {
             self.entries[p].next = next;
+        } else {
+            self.head = next;
         }
         if let Some(n) = next {
             self.entries[n].prev = prev;
@@ -69,10 +71,11 @@ impl AvailableList {
     /// removed from the list, and all removed entries must be re-added in the reverse order from
     /// which they were removed, else the list will be corrupted.
     fn add(&mut self, i: usize) {
-        debug_assert!(i > 0); // not the header
-        debug_assert!(i < self.entries.len()); // TODO:, use footer, and check < length - 1
+        debug_assert!(i < self.entries.len());
         if let Some(p) = self.entries[i].prev {
             self.entries[p].next = Some(i);
+        } else {
+            self.head = Some(i);
         }
         if let Some(n) = self.entries[i].next {
             self.entries[n].prev = Some(i);
@@ -83,11 +86,9 @@ impl AvailableList {
     /// after it, if one exists. The state of the available list must be identical to what it was
     /// when the entry at the given index was previously removed.
     fn swap_for_next(&mut self, i: usize) -> Option<usize> {
-        debug_assert!(i > 0); // not the header
-        debug_assert!(i < self.entries.len()); // TODO:, use footer, and check < length - 1
-        let next = self.entries[i].next;
+        debug_assert!(i < self.entries.len());
         self.add(i);
-        let Some(n) = next else {
+        let Some(n) = self.entries[i].next else {
             return None;
         };
         self.remove(n);
@@ -157,10 +158,6 @@ impl<T: Clone> Permutations<T> {
     /// assert_eq!(perms.next(), Some(vec!["Bob", "Alice", "Eve"]));
     /// assert_eq!(perms.next(), Some(vec!["Bob", "Eve", "Alice"]));
     /// assert_eq!(perms.next(), None);
-    ///
-    /// let mut perms = Permutations::new(1..1);
-    /// assert_eq!(perms.next(), Some(Vec::new()));
-    /// assert_eq!(perms.next(), None);
     /// ```
     pub fn new(elements: impl IntoIterator<Item = T>) -> Self {
         let elems = elements.into_iter().collect::<Vec<T>>();
@@ -168,11 +165,56 @@ impl<T: Clone> Permutations<T> {
         Permutations::from_vec_with_size_constraints(elems, length, false)
     }
 
+    /// Creates a new `Permutations` iterator which will yield all permutations with the specified
+    /// length from the elements in the given iterable.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use combinatorial::Permutations;
+    ///
+    /// let mut perms = Permutations::of_length(1..4, 2);
+    /// assert_eq!(perms.next(), Some(vec![1, 2]));
+    /// assert_eq!(perms.next(), Some(vec![1, 3]));
+    /// assert_eq!(perms.next(), Some(vec![2, 1]));
+    /// assert_eq!(perms.next(), Some(vec![2, 3]));
+    /// assert_eq!(perms.next(), Some(vec![3, 1]));
+    /// assert_eq!(perms.next(), Some(vec![3, 2]));
+    /// assert_eq!(perms.next(), None);
+    ///
+    /// let mut perms = Permutations::of_length('a'..'z', 0);
+    /// assert_eq!(perms.next(), Some(Vec::new()));
+    /// assert_eq!(perms.next(), None);
+    ///
+    /// let mut perms = Permutations::of_length(vec!["foo", "bar", "baz"], 4);
+    /// assert_eq!(perms.next(), None);
+    /// ```
     pub fn of_length(elements: impl IntoIterator<Item = T>, perm_length: usize) -> Self {
         let elems = elements.into_iter().collect::<Vec<T>>();
         Permutations::from_vec_with_size_constraints(elems, perm_length, false)
     }
 
+    /// Creates a new `Permutations` iterator which will yield all permutations of all sizes in
+    /// lexicographic order of elements in the given iterable, relative to the original order of
+    /// those elements.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use combinatorial::Permutations;
+    ///
+    /// let mut perms = Permutations::all(vec!["hello", "world"]).map(|str_vec| str_vec.join(" "));
+    /// assert_eq!(perms.next(), Some(String::from("")));
+    /// assert_eq!(perms.next(), Some(String::from("hello")));
+    /// assert_eq!(perms.next(), Some(String::from("world")));
+    /// assert_eq!(perms.next(), Some(String::from("hello world")));
+    /// assert_eq!(perms.next(), Some(String::from("world hello")));
+    /// assert_eq!(perms.next(), None);
+    ///
+    /// let mut perms = Permutations::all(1..1);
+    /// assert_eq!(perms.next(), Some(Vec::new()));
+    /// assert_eq!(perms.next(), None);
+    /// ```
     pub fn all(elements: impl IntoIterator<Item = T>) -> Self {
         let elems = elements.into_iter().collect::<Vec<T>>();
         Permutations::from_vec_with_size_constraints(elems, 0, true)
@@ -214,8 +256,8 @@ impl<T: Clone> Permutations<T> {
         for _ in self.stack.len()..self.perm_length {
             let Some(i) = self.avail_list.remove_first() else {
                 panic!(
-                    "avail_list: {:?}\nstack: {:?}",
-                    self.avail_list.entries, self.stack
+                    "avail_list.head: {:?}\navail_list.entries: {:?}\nstack: {:?}",
+                    self.avail_list.head, self.avail_list.entries, self.stack
                 );
             };
             // unwrap must succeed since we checked that self.perm_length <= self.elements.len()
@@ -236,7 +278,7 @@ impl<T: Clone> Iterator for Permutations<T> {
         let perm: Vec<T> = self
             .stack
             .iter()
-            .map(|i| self.elements[i - 1].clone()) // use i - 1 since header consumes element 0
+            .map(|i| self.elements[*i].clone())
             .collect();
         loop {
             let Some(curr_last) = self.stack.pop() else {
