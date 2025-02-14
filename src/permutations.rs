@@ -13,6 +13,14 @@ impl AvailableList {
     /// Create a new `AvailableList` corresponding to a list of entries with the given number of
     /// elements.
     fn new(num_elements: usize) -> Self {
+        if num_elements == 0 {
+            return Self {
+                entries: vec![Entry {
+                    prev: None,
+                    next: None,
+                }],
+            };
+        }
         let mut entries: Vec<Entry> = Vec::with_capacity(num_elements + 1); // need space for head
         entries.push(Entry {
             // the 0th entry will act as a "head", but with removal of head.next working
@@ -137,7 +145,7 @@ impl<T: Clone> Permutations<T> {
     /// assert_eq!(perms.next(), Some(vec![1, 3, 2]));
     /// assert_eq!(perms.next(), Some(vec![2, 1, 3]));
     /// assert_eq!(perms.next(), Some(vec![2, 3, 1]));
-    /// assert_eq!(perms.next(), Some(vec![3, 1, 3]));
+    /// assert_eq!(perms.next(), Some(vec![3, 1, 2]));
     /// assert_eq!(perms.next(), Some(vec![3, 2, 1]));
     /// assert_eq!(perms.next(), None);
     ///
@@ -236,7 +244,7 @@ impl<T: Clone> Iterator for Permutations<T> {
                 // next entries, so we've exhausted every permutation of this length.
                 if !self.all_sizes {
                     self.done = true;
-                    return None;
+                    break;
                 }
                 self.perm_length += 1;
                 // we know stack is empty, so populate an initial permutation of the new size
@@ -245,7 +253,7 @@ impl<T: Clone> Iterator for Permutations<T> {
                     // permutations.
 
                     debug_assert!(self.done); // check that fill_remaining_perm set done to true
-                    return None;
+                    break;
                 }
                 // we're on a new permutation length, and filled the stack with the next
                 // permutation, so break out of the loop and return the current permutation we
@@ -257,13 +265,14 @@ impl<T: Clone> Iterator for Permutations<T> {
                 // stack, so try again with the previous element in the permutation.
                 continue;
             };
+            self.stack.push(next);
             if !self.fill_remaining_perm() {
                 // Couldn't fill remaining permutation. XXX: can this ever happen?
                 // Re-add next to the available list, and try with the next element in the stack.
+                self.stack.pop();
                 self.avail_list.add(next);
                 continue;
             }
-            self.stack.push(next);
             break;
         }
         Some(perm)
